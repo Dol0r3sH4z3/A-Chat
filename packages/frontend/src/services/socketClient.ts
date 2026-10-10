@@ -35,14 +35,16 @@ class SocketClient {
     if (this.connectionPromise) return this.connectionPromise;
 
     this.connectionPromise = new Promise((resolve, reject) => {
-      this.ws = new WebSocket("ws://localhost:8080");
-      // this.ws = new WebSocket("wss://a-chat-network.duckdns.org");
+      // this.ws = new WebSocket("ws://localhost:8080");
+      this.ws = new WebSocket("wss://a-chat-network.duckdns.org");
       this.ws.addEventListener("open", (): void => {
         console.log("WebSocket daemon started.");
 
         this.startHeartbeat();
 
-        void this.emit({ payload: null, type: "CONNECTED" }).catch(console.error);
+        void this.emit({ payload: null, type: "CONNECTED" }).catch(
+          console.error,
+        );
         resolve();
       });
 
@@ -61,7 +63,9 @@ class SocketClient {
       });
 
       this.ws.addEventListener("close", (): void => {
-        void this.emit({ payload: null, type: "DISCONNECTED" }).catch(console.error);
+        void this.emit({ payload: null, type: "DISCONNECTED" }).catch(
+          console.error,
+        );
         console.log("CLOSED!");
 
         if (!this.manualClose) {
@@ -79,12 +83,18 @@ class SocketClient {
     return this.connectionPromise;
   }
 
-  on<K extends keyof EventMap>(type: K, callback: (payload: EventMap[K]) => Promise<void> | void): void {
+  on<K extends keyof EventMap>(
+    type: K,
+    callback: (payload: EventMap[K]) => Promise<void> | void,
+  ): void {
     if (!this.listeners.has(type)) this.listeners.set(type, []);
     this.listeners.get(type)?.push(callback as PacketCallback);
   }
 
-  off<K extends keyof EventMap>(type: K, callback: (payload: EventMap[K]) => Promise<void> | void): void {
+  off<K extends keyof EventMap>(
+    type: K,
+    callback: (payload: EventMap[K]) => Promise<void> | void,
+  ): void {
     const callbacks = this.listeners.get(type);
     if (!callbacks) return;
 
@@ -94,7 +104,10 @@ class SocketClient {
     );
   }
 
-  once<K extends keyof EventMap>(type: K, callback: (payload: EventMap[K]) => Promise<void> | void): void {
+  once<K extends keyof EventMap>(
+    type: K,
+    callback: (payload: EventMap[K]) => Promise<void> | void,
+  ): void {
     const wrapper: PacketCallback = async (event) => {
       this.off(type, wrapper);
       await callback(event as EventMap[K]);
@@ -157,10 +170,15 @@ class SocketClient {
       return;
     }
 
-    const delay = Math.min(this.baseReconnectDelay * 2 ** this.reconnectAttempts, this.maxReconnectDelay);
+    const delay = Math.min(
+      this.baseReconnectDelay * 2 ** this.reconnectAttempts,
+      this.maxReconnectDelay,
+    );
 
     this.reconnectAttempts += 1;
-    console.log(`Reconnecting in: ${(delay / 1000).toString()}s. Attempt: ${this.reconnectAttempts.toString()}`);
+    console.log(
+      `Reconnecting in: ${(delay / 1000).toString()}s. Attempt: ${this.reconnectAttempts.toString()}`,
+    );
 
     this.reconnectTimeout = setTimeout(() => {
       void this.connect();

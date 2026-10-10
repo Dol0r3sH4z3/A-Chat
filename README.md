@@ -1,6 +1,6 @@
 # A-Chat
 
-A minimalist, privacy-focused E2EE messenger built on the Double Ratchet Algorithm and X3DH.
+A minimalistic, privacy-focused E2EE messenger built on the Double Ratchet Algorithm and X3DH.
 
 ## Features
 
