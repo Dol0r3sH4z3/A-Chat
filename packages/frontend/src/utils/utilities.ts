@@ -1,7 +1,13 @@
+import type { KeysBundle, MessageEnvelope } from "@a-chat/shared";
+
 import nacl from "tweetnacl";
 
-import type { EncryptedMessage, Header, MyKeysStorage, RawKeysBundle } from "@/types/crypto.ts";
-import type { KeysBundle, MessageEnvelope } from "@/types/packets.ts";
+import type {
+  EncryptedMessage,
+  Header,
+  MyKeysStorage,
+  RawKeysBundle,
+} from "@/types/crypto.ts";
 import type { VirtualNode } from "@/types/virtualFs.ts";
 
 import type { SyncLogFunction } from "./logger.ts";
@@ -94,7 +100,13 @@ export async function generateKeys(): Promise<MyKeysStorage> {
   return keys;
 }
 
-export function handleCat(arguments_: string[], logFunction: SyncLogFunction, sessionId: string, fileSystem: VirtualNode, cwd: string[]): void {
+export function handleCat(
+  arguments_: string[],
+  logFunction: SyncLogFunction,
+  sessionId: string,
+  fileSystem: VirtualNode,
+  cwd: string[],
+): void {
   const target = arguments_[0];
   if (target === undefined) {
     logFunction("cat: не указано имя файла.", { sessionId, status: "error" });
@@ -105,7 +117,10 @@ export function handleCat(arguments_: string[], logFunction: SyncLogFunction, se
   const node = getNodeAtPath(fileSystem, segments);
 
   if (!node) {
-    logFunction(`cat: ${target}: Нет такого файла или каталога.`, { sessionId, status: "error" });
+    logFunction(`cat: ${target}: Нет такого файла или каталога.`, {
+      sessionId,
+      status: "error",
+    });
     return;
   }
   if (node.type === "directory") {
@@ -120,29 +135,56 @@ export function uint8ArrayToBase64(bytes: Uint8Array): string {
   return bytes.toBase64();
 }
 
-const wait = (ms: number): Promise<void> => new Promise((resolve) => setTimeout(resolve, ms));
+const wait = (ms: number): Promise<void> =>
+  new Promise((resolve) => setTimeout(resolve, ms));
 
-export async function runSecretProgram(logFunction: SyncLogFunction, sessionId: string): Promise<void> {
-  logFunction("Initializing...", { sessionId, status: "note", style: "typewriter" });
+export async function runSecretProgram(
+  logFunction: SyncLogFunction,
+  sessionId: string,
+): Promise<void> {
+  logFunction("Initializing...", {
+    sessionId,
+    status: "note",
+    style: "typewriter",
+  });
   await wait(5000);
 
-  logFunction("Patching system...", { sessionId, status: "error", style: "shaking" });
+  logFunction("Patching system...", {
+    sessionId,
+    status: "error",
+    style: "shaking",
+  });
   await wait(2000);
 
   logFunction("Success.", { sessionId, status: "error", style: "shaking" });
 }
 
-export const validateNickname = (nickname: string, logFunction?: SyncLogFunction): null | string => {
+export const validateNickname = (
+  nickname: string,
+  logFunction?: SyncLogFunction,
+): null | string => {
   const cleaned = nickname.trim();
 
-  if (cleaned && cleaned.length >= 2 && cleaned.length <= 15 && !cleaned.startsWith('"') && !cleaned.endsWith('"')) {
+  if (
+    cleaned &&
+    cleaned.length >= 2 &&
+    cleaned.length <= 15 &&
+    !cleaned.startsWith('"') &&
+    !cleaned.endsWith('"')
+  ) {
     return cleaned;
   }
-  if (logFunction) logFunction("Недопустимый никнейм! Длина должна быть от 2 до 15 символов.", { status: "error" });
+  if (logFunction)
+    logFunction(
+      "Недопустимый никнейм! Длина должна быть от 2 до 15 символов.",
+      { status: "error" },
+    );
   return null;
 };
 
-export const serializeMessageEnvelope = (message: EncryptedMessage): MessageEnvelope => {
+export const serializeMessageEnvelope = (
+  message: EncryptedMessage,
+): MessageEnvelope => {
   return {
     cipherText: uint8ArrayToBase64(message.cipherText),
     header: {
@@ -154,7 +196,9 @@ export const serializeMessageEnvelope = (message: EncryptedMessage): MessageEnve
   };
 };
 
-export const deserializeMessageEnvelope = (message: MessageEnvelope): EncryptedMessage => {
+export const deserializeMessageEnvelope = (
+  message: MessageEnvelope,
+): EncryptedMessage => {
   return {
     cipherText: base64ToUint8Array(message.cipherText),
     header: {
@@ -176,12 +220,21 @@ export const getFileType = (type: string): "image" | "other" | "video" => {
   return "other";
 };
 
-export const generateThumbnail = async (blob: Blob, type: "image" | "video"): Promise<string> => {
+export const generateThumbnail = async (
+  blob: Blob,
+  type: "image" | "video",
+): Promise<string> => {
   const THUMB_MAX_SIZE = 300;
 
-  const bitmap = type === "image" ? await createImageBitmap(blob) : await grabVideoFrame(blob);
+  const bitmap =
+    type === "image"
+      ? await createImageBitmap(blob)
+      : await grabVideoFrame(blob);
 
-  const scale = Math.min(1, THUMB_MAX_SIZE / Math.max(bitmap.width, bitmap.height));
+  const scale = Math.min(
+    1,
+    THUMB_MAX_SIZE / Math.max(bitmap.width, bitmap.height),
+  );
   const canvas = document.createElement("canvas");
   canvas.width = Math.round(bitmap.width * scale);
   canvas.height = Math.round(bitmap.height * scale);
@@ -230,7 +283,9 @@ const grabVideoFrame = (blob: Blob): Promise<ImageBitmap> => {
     video.addEventListener(
       "loadeddata",
       () => {
-        const seekTo = Number.isFinite(video.duration) ? Math.min(0.5, video.duration / 2) : 0;
+        const seekTo = Number.isFinite(video.duration)
+          ? Math.min(0.5, video.duration / 2)
+          : 0;
         video.currentTime = seekTo;
       },
       { once: true },
@@ -258,7 +313,11 @@ const grabVideoFrame = (blob: Blob): Promise<ImageBitmap> => {
           .catch((error: unknown) => {
             //eslint-disable-next-line sonarjs/no-nested-functions
             finish(() => {
-              reject(new Error(error instanceof Error ? error.message : String(error)));
+              reject(
+                new Error(
+                  error instanceof Error ? error.message : String(error),
+                ),
+              );
             });
           });
       },

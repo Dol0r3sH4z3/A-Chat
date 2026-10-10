@@ -1,7 +1,14 @@
-import type { MediaInitPayload } from "@/types/common.ts";
+import type {
+  GetKeysResponse,
+  MediaChunk,
+  MediaEnd,
+  MediaInit,
+  MediaInitPayload,
+  UserMessage,
+} from "@a-chat/shared";
+
 import type { RawKeysBundle } from "@/types/crypto.ts";
 import type { PacketCallback } from "@/types/events.ts";
-import type { GetKeysResponse, MediaChunk, MediaEnd, MediaInit, UserMessage } from "@/types/packets.ts";
 
 import { cryptoManager } from "@/services/cryptoManager.ts";
 import { socketClient } from "@/services/socketClient.ts";
@@ -13,7 +20,13 @@ import type { DoubleRatchet } from "./ratchet.ts";
 
 import { initDoubleRatchet } from "./crypto.ts";
 import { messageMediaLog, messageTextLog } from "./logger.ts";
-import { extractKeys, generateThumbnail, getFileType, serializeMessageEnvelope, uint8ArrayToBase64 } from "./utilities.ts";
+import {
+  extractKeys,
+  generateThumbnail,
+  getFileType,
+  serializeMessageEnvelope,
+  uint8ArrayToBase64,
+} from "./utilities.ts";
 
 export function sendKeysToServer(): Promise<boolean> {
   return new Promise((resolve, reject) => {
@@ -23,7 +36,10 @@ export function sendKeysToServer(): Promise<boolean> {
       payload: {
         IK_dh_public: uint8ArrayToBase64(keys.IK_dh.publicKey),
         IK_sign_public: uint8ArrayToBase64(keys.IK_sign.publicKey),
-        OPKs_public: Array.from(keys.OPKs, ([id, keys]) => ({ id, pub: uint8ArrayToBase64(keys.publicKey) })),
+        OPKs_public: Array.from(keys.OPKs, ([id, keys]) => ({
+          id,
+          pub: uint8ArrayToBase64(keys.publicKey),
+        })),
         SPK_dh_public: uint8ArrayToBase64(keys.SPK_dh.publicKey),
         SPK_signature: uint8ArrayToBase64(keys.SPK_signature),
       },
@@ -58,7 +74,10 @@ export function sendKeysToServer(): Promise<boolean> {
   });
 }
 
-export async function sendMediaFile(file: File, nickname: string): Promise<void> {
+export async function sendMediaFile(
+  file: File,
+  nickname: string,
+): Promise<void> {
   const CHUNK_SIZE = 512 * 1024;
 
   const ratchet = cryptoManager.getRatchet(nickname);
@@ -70,9 +89,15 @@ export async function sendMediaFile(file: File, nickname: string): Promise<void>
 
   // STEP 1
 
-  const fileMasterKey = await crypto.subtle.generateKey({ length: 256, name: "AES-GCM" }, true, ["encrypt", "decrypt"]);
+  const fileMasterKey = await crypto.subtle.generateKey(
+    { length: 256, name: "AES-GCM" },
+    true,
+    ["encrypt", "decrypt"],
+  );
   const exportedRawKey = await crypto.subtle.exportKey("raw", fileMasterKey);
-  const fileMasterKeyBase64 = uint8ArrayToBase64(new Uint8Array(exportedRawKey));
+  const fileMasterKeyBase64 = uint8ArrayToBase64(
+    new Uint8Array(exportedRawKey),
+  );
 
   const initPayload: MediaInitPayload = {
     fileMasterKey: fileMasterKeyBase64,
@@ -109,7 +134,11 @@ export async function sendMediaFile(file: File, nickname: string): Promise<void>
 
     const chunkIv = crypto.getRandomValues(new Uint8Array(12));
 
-    const encryptedChunkBuffer = await crypto.subtle.encrypt({ iv: chunkIv, name: "AES-GCM" }, fileMasterKey, chunkBuffer);
+    const encryptedChunkBuffer = await crypto.subtle.encrypt(
+      { iv: chunkIv, name: "AES-GCM" },
+      fileMasterKey,
+      chunkBuffer,
+    );
 
     const chunkEnvelope: MediaChunk = {
       chunkData: uint8ArrayToBase64(new Uint8Array(encryptedChunkBuffer)),
@@ -166,7 +195,10 @@ export async function sendMediaFile(file: File, nickname: string): Promise<void>
   messageMediaLog(fileID, "You", nickname, fileType, thumbnail);
 }
 
-export async function sendMessage(nickname: string, text: string): Promise<void> {
+export async function sendMessage(
+  nickname: string,
+  text: string,
+): Promise<void> {
   const { setStatus } = useChatSessionStore.getState();
 
   try {
@@ -213,24 +245,38 @@ function fetchPeerKeys(nickname: string): Promise<RawKeysBundle> {
     };
 
     socketClient.on("GET_KEYS_RESPONSE", handler);
-    socketClient.send({ payload: { targetNickname: nickname }, type: "GET_KEYS" });
+    socketClient.send({
+      payload: { targetNickname: nickname },
+      type: "GET_KEYS",
+    });
   });
 }
 
-async function sendInitialMessage(nickname: string, ratchet: DoubleRatchet, remoteKeys: RawKeysBundle, text: string): Promise<void> {
+async function sendInitialMessage(
+  nickname: string,
+  ratchet: DoubleRatchet,
+  remoteKeys: RawKeysBundle,
+  text: string,
+): Promise<void> {
   const encrypted = await ratchet.send(text);
   await cryptoManager.setRatchet(nickname, ratchet); // Update ratchet on every step
   const myKeys = cryptoManager.myKeys;
   const temporaryKeys = cryptoManager.getWaitingData(nickname);
   if (!temporaryKeys) {
-    throw new Error("Failed to start a conversation. Temporary keys are missing.");
+    throw new Error(
+      "Failed to start a conversation. Temporary keys are missing.",
+    );
   }
   const toSend: UserMessage = {
     payload: {
       envelope: {
         cipherText: uint8ArrayToBase64(encrypted.cipherText),
         EK_pub: uint8ArrayToBase64(temporaryKeys.EK_my_pub),
-        header: { dh_pub: uint8ArrayToBase64(encrypted.header.dh_pub), n: encrypted.header.n, pn: encrypted.header.pn },
+        header: {
+          dh_pub: uint8ArrayToBase64(encrypted.header.dh_pub),
+          n: encrypted.header.n,
+          pn: encrypted.header.pn,
+        },
 
         IK_dh_pub: uint8ArrayToBase64(myKeys.IK_dh.publicKey),
         iv: uint8ArrayToBase64(encrypted.iv),
