@@ -1,0 +1,38 @@
+{
+  "name": "a_chat_server",
+  "version": "1.0.0",
+  "description": "",
+  "main": "main.ts",
+  "scripts": {
+    "dev": "tsx main.ts",
+    "build": "esbuild main.ts --bundle --platform=node --format=cjs --outfile=index.cjs --external:better-sqlite3",
+    "start": "tsx main.ts",
+    "lint": "eslint ."
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@stylistic/eslint-plugin": "^5.10.0",
+    "@types/better-sqlite3": "^9.6.0",
+    "@types/node": "^25.8.0",
+    "@types/prompt-sync": "^4.2.3",
+    "@types/ws": "^8.18.1",
+    "eslint": "^10.7.0",
+    "eslint-plugin-stylistic": "^0.0.0-0",
+    "tsx": "^4.22.0",
+    "typescript": "^6.0.3",
+    "typescript-eslint": "^8.65.0"
+  },
+  "dependencies": {
+    "@a-chat/shared": "*",
+    "better-sqlite3": "^13.0.3",
+    "prompt-sync": "^4.2.0",
+    "tweetnacl": "^1.0.3",
+    "ws": "^8.20.1",
+    "zod": "^4.4.3",
+    "zod-validation-error": "^5.0.0"
+  }
+}

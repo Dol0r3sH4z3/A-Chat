@@ -1,0 +1,16 @@
+{
+  "name": "a-chat-monorepo",
+  "private": true,
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "dev:client": "npm run dev -w packages/frontend",
+    "dev:server": "npm run dev -w packages/server"
+  },
+  "allowScripts": {
+    "unrs-resolver@1.12.2": true,
+    "@parcel/watcher@2.6.0": true,
+    "esbuild@0.28.2": true
+  }
+}
